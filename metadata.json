@@ -1,0 +1,49 @@
+import { jsPDF } from 'jspdf';
+import { Document } from '../types';
+import { loadImage } from './image';
+
+export async function generatePDF(doc: Document): Promise<Blob> {
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'px',
+    format: 'a4'
+  });
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+
+  for (let i = 0; i < doc.pages.length; i++) {
+    if (i > 0) {
+      pdf.addPage();
+    }
+    
+    const page = doc.pages[i];
+    const img = await loadImage(page.filteredImage);
+    
+    // Calculate dimensions to fit page
+    const imgRatio = img.width / img.height;
+    const pageRatio = pageWidth / pageHeight;
+    
+    let renderWidth = pageWidth;
+    let renderHeight = pageHeight;
+    let x = 0;
+    let y = 0;
+    
+    if (imgRatio > pageRatio) {
+      // Image is wider than page
+      renderHeight = pageWidth / imgRatio;
+      y = (pageHeight - renderHeight) / 2;
+    } else {
+      // Image is taller than page
+      renderWidth = pageHeight * imgRatio;
+      x = (pageWidth - renderWidth) / 2;
+    }
+    
+    // For a scanner app, usually we want to fit to page or stretch slightly if it's a document
+    // But keeping aspect ratio is safer.
+    
+    pdf.addImage(page.filteredImage, 'JPEG', x, y, renderWidth, renderHeight);
+  }
+
+  return pdf.output('blob');
+}

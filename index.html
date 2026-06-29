@@ -1,0 +1,19 @@
+export type Point = { x: number; y: number };
+
+export type FilterType = 'original' | 'magic' | 'document' | 'photo' | 'bw';
+
+export interface DocumentPage {
+  id: string;
+  originalImage: string; // The full uncropped image from camera/gallery
+  croppedImage: string; // The perspective warped image
+  filteredImage: string; // The final image with filter applied
+  filter: FilterType;
+  corners: Point[];
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  createdAt: number;
+  pages: DocumentPage[];
+}
